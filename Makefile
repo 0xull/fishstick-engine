@@ -33,9 +33,11 @@ lint-check-deps:
 
 db-server:
 	@if command -v cockroach > /dev/null 2>&1; then \
-		cockroach start-single-node --insecure \
-			--store=/var/lib/cockroach \
-			--listen-addr=localhost:26257; \
+        cockroach start-single-node \
+            --accept-sql-without-tls --insecure \
+            --store=./cockroach-data \
+            --listen-addr=localhost \
+            --http-addr=localhost:8080; \
 	else \
 		@echo "missing CockroachDB binary."; \
 	fi

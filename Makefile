@@ -31,7 +31,7 @@ lint-check-deps:
 		GO111MODULE=on go get -u github.com/golangci/golangci-lint/cmd/golangci-lint; \
 	fi
 
-db_server:
+db-server:
 	@if command -v cockroach > /dev/null 2>&1; then \
 		cockroach start-single-node --insecure \
 			--store=/var/lib/cockroach \
@@ -40,7 +40,11 @@ db_server:
 		@echo "missing CockroachDB binary."; \
 	fi
 
-.PHONY: migrate-check-deps
+.PHONY: run-cdb-migrations migrate-check-deps check-dsn-env
+
+run-cdb-migrations: migrate-check-deps check-dsn-env
+	migrate -source file://linkgraph/store/cdb/migrations -database  '$(subst postgresql,cockroach,${CDB_DSN}) up'
+
 
 migrate-check-deps:
 	@if [ -z `which migrate` ]; then \
@@ -55,3 +59,20 @@ migrate-check-deps:
 			go install -tags 'cockroach postgres' github.com/golang-migrate/migrate/v4/cmd/migrate; \
 		fi \
 	fi
+
+define dsn_missing_err
+CDB_DSN envvar is undefined. To run the migrations this envvar
+must point to a cockroach db instance. For example, if you are
+running a local cockroachdb (with --insecure) and have created
+a database called 'linkgraph' you can define the envvar by 
+running:
+
+export CDB_DSN='postgresql://root@localhost:26257/linkgraph?sslmode=disable'
+
+endef
+export dsn_missing_err
+
+check-dsn-env:
+ifndef CDB_DSN
+	$(error ${dsn_missing_err})
+endif

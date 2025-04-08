@@ -43,7 +43,7 @@ db-server:
 .PHONY: run-cdb-migrations migrate-check-deps check-dsn-env
 
 run-cdb-migrations: migrate-check-deps check-dsn-env
-	migrate -source file://linkgraph/store/cdb/migrations -database  '$(subst postgresql,cockroach,${CDB_DSN}) up'
+	migrate -source file://linkgraph/store/cdb/migrations -database  '$(subst postgresql,cockroach,${CDB_DSN})' up
 
 
 migrate-check-deps:
@@ -52,11 +52,11 @@ migrate-check-deps:
 		if [ "${GO111MODULE}" = "off" ]; then \
 			echo "[go get] installing github.com/golang-migrate/migrate/cmd/migrate"; \
 			go get -tags 'cockroachdb postgres' -u github.com/golang-migrate/migrate/cmd/migrate; \
-			go install -tags 'cockroach postgres' github.com/golang-migrate/migrate/cmd/migrate; \
+			go install -tags 'cockroachdb postgres' github.com/golang-migrate/migrate/cmd/migrate; \
 		else \
 			echo "[go get] installing github.com/golang-migrate/migrate/v4/cmd/migrate"; \
 			go get -tags 'cockroachdb postgres' -u github.com/golang-migrate/migrate/v4/cmd/migrate; \
-			go install -tags 'cockroach postgres' github.com/golang-migrate/migrate/v4/cmd/migrate; \
+			go install -tags 'cockroachdb postgres' github.com/golang-migrate/migrate/v4/cmd/migrate; \
 		fi \
 	fi
 

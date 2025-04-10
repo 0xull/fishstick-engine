@@ -1,5 +1,5 @@
-<p align="center>
-    <img src="/uml-diagram.png" alt="fishstick-engine-uml-diagram"/>
+<p align="center">
+  <img src="uml-diagram.png" alt="fishstick-engine-uml-diagram" />
 </p>
 
 # fishstick-engine

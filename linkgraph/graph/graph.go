@@ -70,7 +70,7 @@ type Graph interface {
 	UpsertLink(link *Link) error
 	
 	// FindLink looks up a link by its ID.
-	FindLink(id uuid.UUID) *Link
+	FindLink(id uuid.UUID) (*Link, error)
 	
 	// Links returns an iterator for the set of links whose IDs belong to the
 	// [fromID, toID) range and were retrieved before the provided timestamp.

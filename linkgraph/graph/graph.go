@@ -84,7 +84,7 @@ type Graph interface {
 	// timestamp.
 	Edges(fromID, toID uuid.UUID, updatedBefore time.Time) (EdgeIterator, error)
 	
-	// RemoveStaleEdge removes any edge that originates from the specified
+	// RemoveStaleEdges removes any edge that originates from the specified
 	// link ID and was updated before the specified timestamp.
-	RemoveStaleEdge(fromID uuid.UUID, updatedBefore time.Time) error
+	RemoveStaleEdges(fromID uuid.UUID, updatedBefore time.Time) error
 }

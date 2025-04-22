@@ -50,10 +50,10 @@ type edgeIterator struct {
 
 // Next implements graph.EdgeIterator.
 func (e edgeIterator) Next() bool {
-	if i.currIndex >= len(e.edges) {
+	if e.currIndex >= len(e.edges) {
 		return false
 	}
-	i.currIndex++
+	e.currIndex++
 	return true
 }
 

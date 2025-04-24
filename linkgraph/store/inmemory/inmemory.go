@@ -71,7 +71,7 @@ func (s *InMemoryGraph) UpsertLink(link *graph.Link) error {
 
 // FindLink looks up a link by its ID.
 func (s *InMemoryGraph) FindLink(id uuid.UUID) (*graph.Link, error) {
-	s.mu.RLock()
+	s.mu.RLock()	
 	defer s.mu.RUnlock()
 	
 	link := s.links[id]

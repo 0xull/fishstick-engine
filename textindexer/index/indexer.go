@@ -40,6 +40,11 @@ type Indexer interface {
 	// Search the index for a particular query and return back a resulting
 	// iterator.
 	Search(query Query) (Iterator, error)
+	
+	// UpdateScore updates the PageRank score for a document with the
+	// specified link ID. If no such document exists, a placeholder
+	// document with the provided score will be created.
+	UpdateScore(linkID uuid.UUID, score float64) error
 }
 
 // Iterator is implemented by objects that can paginate search results.

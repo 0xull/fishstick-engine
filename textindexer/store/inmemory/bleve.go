@@ -51,7 +51,7 @@ func (i *InMemoryBleveIndexer) Close() error {
 }
 
 // Index inserts a new document to the index or updates the index entry
-// for and existing document.
+// for an existing document.
 func (i *InMemoryBleveIndexer) Index(doc *index.Document) error {
 	if doc.LinkID == uuid.Nil {
 		return xerrors.Errorf("index: %w", index.ErrMissingLinkID)

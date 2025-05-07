@@ -309,7 +309,7 @@ func mapEsDoc(d *esDoc) *index.Document {
 }
 
 func makeEsDoc(d *index.Document) esDoc {
-	// Note: we intentionally skip PageRank as we don't want to updates to
+	// Note: we intentionally skip PageRank as we don't want updates to
 	// overwrite existing PageRank values.
 	return esDoc{
 		LinkID: d.LinkID.String(),

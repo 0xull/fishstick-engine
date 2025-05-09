@@ -12,17 +12,17 @@ var _ StageParams = (*workerParams)(nil)
 
 type workerParams struct {
 	stage int
-	
+
 	// Channels for the worker's input, output and errors.
-	inCh <-chan Payload
+	inCh  <-chan Payload
 	outCh chan<- Payload
 	errCh chan<- error
 }
 
-func (p *workerParams) StageIndex() int { return p.stage }
-func (p *workerParams) Input() <-chan Payload { return p.inCh }
+func (p *workerParams) StageIndex() int        { return p.stage }
+func (p *workerParams) Input() <-chan Payload  { return p.inCh }
 func (p *workerParams) Output() chan<- Payload { return p.outCh }
-func (p *workerParams) Error() chan<- error { return p.errCh }
+func (p *workerParams) Error() chan<- error    { return p.errCh }
 
 // Pipeline impelements a modular, multi-stage pipeline. Each pipeline is
 // constructed out of an input source, an output sink and zero or more
@@ -39,20 +39,20 @@ func New(stages ...StageRunner) *Pipeline {
 	}
 }
 
-// Process reads the content of the specified source, sends them through the 
+// Process reads the content of the specified source, sends them through the
 // various stages of the pipeline and directs the results to the specified sink
 // and returns back any errors that may have occurred.
-// 
+//
 // Calls to Process block until:
-// 	- all data from the source has been processed OR
-// 	- an error occurs OR
-// 	- the supplied context expires
-// 
+//   - all data from the source has been processed OR
+//   - an error occurs OR
+//   - the supplied context expires
+//
 // It is safe to call Process concurrently with different sources and sinks.
 func (p *Pipeline) Process(ctx context.Context, source Source, sink Sink) error {
 	var wg sync.WaitGroup
 	pCtx, ctxCancelFn := context.WithCancel(ctx)
-	
+
 	// Allocate channels for wiring together the source, the pipeline stages
 	// and the output sink. The outputs of the i_th stage is used as an input
 	// for the i+1_th stage. We need to allocate one extra channel than the
@@ -62,47 +62,47 @@ func (p *Pipeline) Process(ctx context.Context, source Source, sink Sink) error 
 	for i := 0; i < len(stageCh); i++ {
 		stageCh[i] = make(chan Payload)
 	}
-	
+
 	// Start a worker for each stages
 	for i := 0; i < len(p.stages); i++ {
 		wg.Add(1)
 		go func(stageIndex int) {
 			p.stages[stageIndex].Run(ctx, &workerParams{
 				stage: stageIndex,
-				inCh: stageCh[stageIndex],
+				inCh:  stageCh[stageIndex],
 				outCh: stageCh[stageIndex+1],
 				errCh: errCh,
 			})
-			
+
 			// Signal next stage that no more data is available.
 			close(stageCh[stageIndex+1])
 			wg.Done()
 		}(i)
 	}
-	
+
 	// Start source and sink workers
 	wg.Add(2)
 	go func() {
 		sourceWorker(pCtx, source, stageCh[len(stageCh)-1], errCh)
-		
+
 		// Signal next stage that no more data is available.
 		close(stageCh[0])
 		wg.Done()
 	}()
-	
+
 	go func() {
 		wg.Wait()
 		close(errCh)
 		ctxCancelFn()
 	}()
-	
+
 	// Collect any emitted errors and wrap them in multi-error.
 	var err error
 	for pErr := range errCh {
 		err = multierror.Append(err, pErr)
 		ctxCancelFn()
 	}
-	
+
 	return err
 }
 
@@ -119,7 +119,7 @@ func sourceWorker(ctx context.Context, source Source, outCh chan<- Payload, errC
 			return
 		}
 	}
-	
+
 	// Check for errors
 	if err := source.Error(); err != nil {
 		wrappedErr := xerrors.Errorf("pipeline source: %w", err)
@@ -137,7 +137,7 @@ func sinkWorker(ctx context.Context, sink Sink, inCh <-chan Payload, errCh chan<
 			if !ok {
 				return
 			}
-			
+
 			if err := sink.Consume(ctx, payload); err != nil {
 				wrappedErr := xerrors.Errorf("pipeline sink: %w", err)
 				maybeEmitError(wrappedErr, errCh)
@@ -151,7 +151,7 @@ func sinkWorker(ctx context.Context, sink Sink, inCh <-chan Payload, errCh chan<
 	}
 }
 
-// maybeEmitError attempts to queue err to a buffered error channel. If the 
+// maybeEmitError attempts to queue err to a buffered error channel. If the
 // channel is full, the error is dropped.
 func maybeEmitError(err error, errCh chan<- error) {
 	select {

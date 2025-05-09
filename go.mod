@@ -6,6 +6,7 @@ require (
 	github.com/blevesearch/bleve/v2 v2.5.0
 	github.com/elastic/go-elasticsearch v0.0.0
 	github.com/google/uuid v1.6.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lib/pq v1.10.9
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -34,6 +35,7 @@ require (
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/kr/text v0.1.0 // indirect

@@ -30,7 +30,7 @@ type ProcessorFunc func(context.Context, Payload) (Payload, error)
 
 // Process calls f(ctx, p).
 func (f ProcessorFunc) Process(ctx context.Context, p Payload) (Payload, error) {
-	f(ctx, p)
+	return f(ctx, p)
 }
 
 // StageParams encapsulates the information required for executing a pipeline

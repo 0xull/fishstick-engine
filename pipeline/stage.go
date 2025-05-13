@@ -67,7 +67,7 @@ func FixedWorkerPool(proc Processor, numWorkers int) StageRunner {
 	}
 	
 	fifos := make([]StageRunner, numWorkers)
-	for i := 0; i < numWorkers; i++ {
+	for i := range numWorkers {
 		fifos[i] = FIFO(proc)
 	}
 	
@@ -79,7 +79,7 @@ func (p *fixedWorkerPool) Run(ctx context.Context, params StageParams) {
 	var wg sync.WaitGroup
 	
 	// Spin up each worker in the pool and wait for them to exist
-	for i := 0; i < len(p.fifos); i++ {
+	for i := range p.fifos {
 		wg.Add(1)
 		go func(fifoIndex int) {
 			p.fifos[fifoIndex].Run(ctx, params)
@@ -104,7 +104,7 @@ func DynamicWorkerPool(proc Processor, maxWorkers int) StageRunner {
 	}
 	
 	tokenPool := make(chan struct{}, maxWorkers)
-	for i := 0; i < maxWorkers; i++ {
+	for range maxWorkers {
 		tokenPool <- struct{}{}
 	}
 	

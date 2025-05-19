@@ -4,4 +4,4 @@
 
 # fishstick-engine
 
-This is a tiny grad search engine as a learning experience
+This is a tiny grade search engine as a learning experience

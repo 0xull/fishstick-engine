@@ -8,6 +8,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lib/pq v1.10.9
+	go.uber.org/mock v0.5.2
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )

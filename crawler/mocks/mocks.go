@@ -122,18 +122,18 @@ func (m *MockGraph) EXPECT() *MockGraphMockRecorder {
 	return m.recorder
 }
 
-// RemoveStaleEdge mocks base method.
-func (m *MockGraph) RemoveStaleEdge(fromID uuid.UUID, updatedBefore time.Time) error {
+// RemoveStaleEdges mocks base method.
+func (m *MockGraph) RemoveStaleEdges(fromID uuid.UUID, updatedBefore time.Time) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveStaleEdge", fromID, updatedBefore)
+	ret := m.ctrl.Call(m, "RemoveStaleEdges", fromID, updatedBefore)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RemoveStaleEdge indicates an expected call of RemoveStaleEdge.
-func (mr *MockGraphMockRecorder) RemoveStaleEdge(fromID, updatedBefore any) *gomock.Call {
+// RemoveStaleEdges indicates an expected call of RemoveStaleEdges.
+func (mr *MockGraphMockRecorder) RemoveStaleEdges(fromID, updatedBefore any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveStaleEdge", reflect.TypeOf((*MockGraph)(nil).RemoveStaleEdge), fromID, updatedBefore)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveStaleEdges", reflect.TypeOf((*MockGraph)(nil).RemoveStaleEdges), fromID, updatedBefore)
 }
 
 // UpsertEdge mocks base method.

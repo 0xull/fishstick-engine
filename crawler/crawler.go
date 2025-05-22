@@ -106,3 +106,37 @@ type Config struct {
 type Crawler struct {
 	p *pipeline.Pipeline
 }
+
+// NewCrawler returns a new crawler instance.
+func NewCrawler(cfg Config) *Crawler {
+	return &Crawler{
+		p: assembleCrawlerPipeline(cfg),
+	}
+}
+
+// assembleCrawlerPipeline creates the various stages of a crawler pipeline
+// using the options in cfg and assembles them into a pipeline instance.
+func assembleCrawlerPipeline(cfg Config) *pipeline.Pipeline {
+	return pipeline.New(
+		pipeline.FixedWorkerPool(
+			newLinkFetcher(cfg.URLGetter, cfg.PrivateNetworkDetector), 
+			cfg.FetchWorkers,
+		),
+		pipeline.FIFO(newLinkExtractor(cfg.PrivateNetworkDetector)),
+		pipeline.FIFO(newTextExtractor()),
+		pipeline.Broadcast(
+			newGraphUpdater(cfg.Graph),
+			newTextIndexer(cfg.Indexer),
+		),
+	)
+}
+
+// Crawl iterates linkIt and sends links through the crawler pipeline
+// returning the total count of links that went through the pipeline. Calls to 
+// Crawl block until the link iterator is exhausted, an error occurs or the
+// context is cancelled.
+func (c *Crawler) Crawl(ctx context.Context, linkIt graph.LinkIterator) (int, error) {
+	sink := new(countingSink)
+	err := c.p.Process(ctx, &linkSource{linkIt:linkIt}, sink)
+	return sink.getCount(), err
+}

@@ -66,7 +66,7 @@ type Graph interface {
 	
 	// RemoveStaleEdges removes any edge that originates from the specified
 	// link ID and was updated before the specified timestamp.
-	RemoveStaleEdge(fromID uuid.UUID, updatedBefore time.Time) error
+	RemoveStaleEdges(fromID uuid.UUID, updatedBefore time.Time) error
 }
 
 // Indexer is implemented by objects that can index the contents of webpages

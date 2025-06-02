@@ -37,3 +37,5 @@ type Iterator interface {
 	// Error returns the last error that the iterator encountered.
 	Error() error
 }
+
+type QueueFactory func() Queue

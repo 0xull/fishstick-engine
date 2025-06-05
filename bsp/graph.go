@@ -85,6 +85,52 @@ type Graph struct {
 	pendingInStep int64
 }
 
+// NewGraph creates a new Graph instance using the specified configuration. It
+// is important for callers to invoke Close() on the returned graph instance
+// when they are done using it.
+func NewGraph(cfg GraphConfig) (*Graph, error) {
+	if err := cfg.validate(); err != nil {
+		return nil, xerrors.Errorf("graph config validation failed: %w", err)
+	}
+	
+	g := &Graph{
+		computeFn: cfg.ComputeFn,
+		queueFactory: cfg.QueueFactory,
+		aggregators: make(map[string]Aggregator),
+		vertices: make(map[string]*Vertex),
+	}
+	g.startWorkers(cfg.ComputeWorkers)
+	
+	return g, nil
+}
+
+// Close releases any resources associated with the graph.
+func (g *Graph) Close() error {
+	close(g.vertexCh)
+	g.wg.Wait()
+	
+	return g.Reset()
+}
+
+// Reset the state of the graph by removing any existing vertices or
+// aggregators and resetting the superstep counter.
+func (g *Graph) Reset() error {
+	g.superstep = 0
+	for _, v := range g.vertices {
+		for i := range 2 {
+			if err := v.msgQueue[i].Close(); err != nil {
+				return xerrors.Errorf("closing message queue #%d for vertex %v: %w", i, v.ID(), err)
+			}
+		}
+	}
+	g.vertices = make(map[string]*Vertex)
+	g.aggregators = make(map[string]Aggregator)
+	return nil
+}
+
+// Vertices returns the graph vertices as a map where the key is the vertex ID.
+func (g *Graph) Vertices() map[string]*Vertex { return g.vertices }
+
 // AddVertex inserts a new vertex with the specified id and initial value into
 // the graph. If the vertex already exists, AddVertex will just overwrite its
 // value with the provided initVal.
@@ -128,6 +174,10 @@ func (g *Graph) RegisterAggregator(name string, aggr Aggregator) { g.aggregators
 // Aggregator returns the aggregator with the specified name or nil if the
 // aggregator does not exist
 func (g *Graph) Aggregator(name string) Aggregator { return g.aggregators[name] }
+
+// Aggregators returns a map of all currently registered aggregators where the
+// key is the aggregator's name.
+func (g *Graph) Aggregators() map[string]Aggregator { return g.aggregators }
 
 // RegisterRelayer configures a Relayer that the graph will invoke when
 // attempting to deliver a message to a vertex that is not known locally but
@@ -181,6 +231,9 @@ func (g *Graph) SendMessage(dstID string, msg message.Message) error {
 	
 	return xerrors.Errorf("message cannot be delivered to %q: %w", dstID, ErrInvalidMessageDestination)
 }
+
+// Superstep returns the current superstep value.
+func (g *Graph) Superstep() int { return g.superstep }
 
 // Step excutes the next superstep and returns back the number of vertices
 // that were processed either because they were still active or because they

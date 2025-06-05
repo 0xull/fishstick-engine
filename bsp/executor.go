@@ -62,6 +62,13 @@ func (ex *Executor) RunToCompletion(ctx context.Context, numSteps int) error {
 	return ex.run(ctx, numSteps)
 }
 
+// RunSteps executes at most numStep superstep unless the context expires, an
+// error occurs or one of the Pre/PostSkepKeepRunning callbacks specified at
+// configuration time return false.
+func (ex *Executor) RunSteps(ctx context.Context, numSteps int) error {
+	return ex.run(ctx, numSteps)
+}
+
 // Graph returns the graph instance associated with this executor.
 func (ex *Executor) Superstep() int {
 	return ex.g.Superstep()

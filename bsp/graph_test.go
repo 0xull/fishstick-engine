@@ -1,6 +1,8 @@
 package bspgraph_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -79,7 +81,7 @@ func (s *GraphTestSuite) TestMessageBroadcasting(c *gc.C) {
 	c.Assert(g.AddEdge("0", "2", nil), gc.IsNil)
 	c.Assert(g.AddEdge("0", "3", nil), gc.IsNil)
 
-	err = execFixedStep(g, 2)
+	err = execFixedSteps(g, 2)
 	c.Assert(err, gc.IsNil)
 
 	for id, v := range g.Vertices() {
@@ -152,5 +154,90 @@ func (s *GraphTestSuite) TestMessageRelay(c *gc.C) {
 	g1.AddVertex("graph1.vertex", nil)
 	c.Assert(g1.AddEdge("graph1.vertex", "graph2.vertex", nil), gc.IsNil)
 	g1.RegisterRelayer(localRelayer{to: g2})
+	
+	// Exec both graphs in lockstep for 3 steps.
+	// Step 0: g1 sends message to g2.
+	// Step 1: g2 receives the message, updates its value and sends TestMessageRelay
+	// 		   back to g1.
+	// Step 2: g1 receives message and updates its value.
+	syncCh := make(chan struct{})
+	ex1 := bspgraph.NewExecutor(g1, bspgraph.ExecutorCallbacks{
+		PreStep: func(ctx context.Context, g *bspgraph.Graph) error {
+			syncCh <- struct{}{}
+			return nil
+		},
+		PostStep: func(ctx context.Context, g *bspgraph.Graph, activeStepInStep int) error {
+			syncCh <- struct{}{}
+			return nil
+		},
+	})
+	ex2 := bspgraph.NewExecutor(g2, bspgraph.ExecutorCallbacks{
+		PreStep: func(ctx context.Context, g *bspgraph.Graph) error {
+			<-syncCh
+			return nil
+		},
+		PostStep: func(ctx context.Context, g *bspgraph.Graph, activeStepInStep int) error {
+			<-syncCh
+			return nil
+		},
+	})
+	
+	ex1DoneCh := make(chan struct{})
+	go func() {
+		err := ex1.RunSteps(context.TODO(), 3)
+		c.Assert(err, gc.IsNil)
+		close(ex1DoneCh)
+	}()
+	
+	err = ex2.RunSteps(context.TODO(), 3)
+	c.Assert(err, gc.IsNil)
+	<-ex1DoneCh
+	
+	c.Assert(g1.Vertices()["graph1.vertex"].Value(), gc.Equals, 42)
+	c.Assert(g2.Vertices()["graph2.vertex"].Value(), gc.Equals, 42)
+}
 
+func (s *GraphTestSuite) TestHandleComputeFuncError(c *gc.C) {
+	g, err := bspgraph.NewGraph(bspgraph.GraphConfig{
+		ComputeWorkers: 4,
+		ComputeFn: func(g *bspgraph.Graph, v *bspgraph.Vertex, msgIt message.Iterator) error {
+			if v.ID() == "50" {
+				return errors.New("something went wrong")
+			}
+			return nil
+		},
+	})
+	c.Assert(err, gc.IsNil)
+	defer func() { c.Assert(g.Close(), gc.IsNil) }()
+	
+	numVerts := 1000
+	for i := range numVerts {
+		g.AddVertex(fmt.Sprint(i), nil)
+	}
+	
+	err = execFixedSteps(g, 1)
+	c.Assert(err, gc.ErrorMatches, `running compute function for vertex "50" failed: something went wrong`)
+}
+
+type intMsg struct {
+	value int
+}
+
+func (m intMsg) Type() string { return "intMsg" }
+
+type localRelayer struct {
+	relayErr error
+	to *bspgraph.Graph
+}
+
+func (r localRelayer) Relay(dstID string, msg message.Message) error {
+	if r.relayErr != nil {
+		return r.relayErr
+	}
+	return r.to.SendMessage(dstID, msg)
+}
+
+func execFixedSteps(g *bspgraph.Graph, numSteps int) error {
+	exec := bspgraph.NewExecutor(g, bspgraph.ExecutorCallbacks{})
+	return exec.RunSteps(context.TODO(), numSteps)
 }

@@ -58,8 +58,8 @@ func NewExecutor(g *Graph, cb ExecutorCallbacks) *Executor {
 // RunToCompletion keeps executing supersteps until the context expires, an
 // error occurs or one of the Pre/PostStepKeepRunning callbacks specified at
 // configuration time returns false.
-func (ex *Executor) RunToCompletion(ctx context.Context, numSteps int) error {
-	return ex.run(ctx, numSteps)
+func (ex *Executor) RunToCompletion(ctx context.Context) error {
+	return ex.run(ctx, -1)
 }
 
 // RunSteps executes at most numStep superstep unless the context expires, an
